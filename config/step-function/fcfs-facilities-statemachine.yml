@@ -88,7 +88,7 @@ stateMachine:
         Result: "No data records found in CSV"
         End: true
               
-  events:
-    - schedule:
-        rate: cron(*/10 * * * ? *)
-        enabled: false 
+  # events:
+  #   - schedule:
+  #       rate: cron(*/10 * * * ? *)
+  #       enabled: false 
