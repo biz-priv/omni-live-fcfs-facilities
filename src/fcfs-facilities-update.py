@@ -4,6 +4,7 @@ import boto3
 import time
 import os
 import requests
+from datetime import datetime, timedelta
 from src.shared.dynamo import query_dynamodb
 env = os.environ['Environment']
 username = os.environ['Username']
@@ -18,7 +19,7 @@ def lambda_handler(event, context):
     for item in event["Payload"]:
         order_id=item['item']["order_id"]
         order_info = validate_order(order_id)
-        if not order_info:
+        if not order_info or order_info['status']['S'] == 'Rejected':
             output=get_order(order_id)
             print("ids",order_id,os.environ['Environment'])
             response=get_orders(output)
@@ -130,6 +131,7 @@ def get_orders(output):
         put_url = f"https://tms-lvlp.loadtracking.com:6790/ws/api/orders/update"
         put_response = requests.put(put_url, auth=(username, password), headers=mcleod_headers, json=output)
         print(put_response.status_code)
+        return put_response.status_code
         # add updated order id to DB so that we don't update it again
 
 
@@ -139,7 +141,7 @@ def validate_order(order_id):
                                 'order_id = :order_id', {":order_id": {"S": order_id}})
         if not response['Items']:
             return False
-        return True
+        return response['Items'][0]
     except Exception as validate_error:
         print("ValidateDynamoDBError: %s",
                           json.dumps(validate_error))
