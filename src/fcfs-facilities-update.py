@@ -4,6 +4,7 @@ import boto3
 import time
 import os
 import requests
+import pytz
 from datetime import datetime, timedelta
 from src.shared.dynamo import query_dynamodb
 env = os.environ['Environment']
@@ -21,7 +22,13 @@ def lambda_handler(event, context):
         order_info = validate_order(order_id)
         if not order_info or order_info['status']['S'] == 'Rejected':
             output=get_order(order_id)
-            print("ids",order_id,os.environ['Environment'])
+            print("order id & env: ",order_id,os.environ['Environment'])
+            try:
+                if output['stops']:
+                    print("valid order")
+            except:
+                print("Invalid order")
+                continue
             response=get_orders(output)
             # Update status based on response
             if response == 200:
@@ -31,20 +38,26 @@ def lambda_handler(event, context):
             # Store data in DynamoDB
             dynamodb = boto3.resource('dynamodb')
             table = dynamodb.Table(os.environ['Dynamo_Table'])
+            tz = pytz.timezone('America/Chicago')
+            current_time = datetime.now(tz).strftime("%Y:%m:%d %H:%M:%S")
             table.put_item(
                 Item={
                     'order_id': order_id,
-                    'status': status
+                    'status': status,
+                    'InsertedTimeStamp': current_time
                 }
                     )
             
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Succeeded')
-        }
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Succeeded')
+    }
 
 def get_location_info(location_id):
-    url = f"https://tms-lvlp.loadtracking.com:6790/ws/api/locations/{location_id}"
+    if env=='dev':
+        url = f"https://tms-lvlp.loadtracking.com:6790/ws/api/locations/{location_id}"
+    else:
+        url = f"https://tms-lvlp.loadtracking.com/ws/api/locations/{location_id}"
     response = requests.get(url, auth=(username, password), headers=mcleod_headers)
     #with open(r'C:\Users\andre\Downloads\json1.json', 'w', encoding='utf-8') as f:
     #    json.dump(response.json(), f, ensure_ascii=False, indent=4)
@@ -63,14 +76,15 @@ def get_order(order_id):
         get_url3 = f"https://tms-lvlp.loadtracking.com/ws/orders/{order_id}"
     get_response3 = requests.get(get_url3, auth=(username, password), headers=mcleod_headers)
     get_output3 = get_response3.json()
+    print("get_output3: ",get_output3)
     return get_output3
 
 def get_orders(output):
     
     # check to see if order has already been updated
     is_what_we_want = False
-    order_id = output['id']
-    num_of_stops = len(output['stops'])
+    # order_id = output['id']
+    # num_of_stops = len(output['stops'])
     for stop in output['stops']:
         location_id = stop['location_id']
         location_name = stop['location_name']
@@ -128,9 +142,12 @@ def get_orders(output):
             except:
                 pass
     if is_what_we_want == True:
-        put_url = f"https://tms-lvlp.loadtracking.com:6790/ws/api/orders/update"
+        if env=='dev':
+            put_url = f"https://tms-lvlp.loadtracking.com:6790/ws/api/orders/update"
+        else:
+            put_url = f"https://tms-lvlp.loadtracking.com/ws/api/orders/update"
         put_response = requests.put(put_url, auth=(username, password), headers=mcleod_headers, json=output)
-        print(put_response.status_code)
+        print("status_code: ",put_response.status_code)
         return put_response.status_code
         # add updated order id to DB so that we don't update it again
 
