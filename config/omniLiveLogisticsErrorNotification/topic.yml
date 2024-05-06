@@ -1,0 +1,7 @@
+omniLiveLogisticsErrorNotification:
+  Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: OmniLiveLogisticsErrorNotification
+        TopicName: Omni-Live-Logistics-ErrorNotification-topic
+
+

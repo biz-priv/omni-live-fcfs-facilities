@@ -44,7 +44,10 @@ provider:
       Action: 
         - glue:*
       Resource: "*"
-
+    - Effect: Allow
+      Action:
+         - sns:*
+      Resource: "*"
 package:
   individually: true
 
@@ -77,6 +80,9 @@ resources:
     #     Name: '/fcfsfacilities/lvlp/password/${self:provider.stage}'
     #     Type: "String"
     #     Value: "lvlpapiuser"
+    omniLiveLogisticsErrorNotification: ${file(config/omniLiveLogisticsErrorNotification/topic.yml):omniLiveLogisticsErrorNotification}
+    omniLiveLogisticsEmailSubscription: ${file(config/omniLiveLogisticsErrorNotification/subscription.yml):omniLiveLogisticsEmailSubscription}
+
     fcfsfacilities: ${file(config/dynamo/fcfs-facilities-table.yml):fcfs-facilities}
 
     stateMachineRole:

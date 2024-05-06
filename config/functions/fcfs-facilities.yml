@@ -20,3 +20,4 @@ function:
       Password: ${ssm:/readytobill/lvlp/password/${self:provider.stage}}
       # url: ${ssm:/readytobill/endpoint/${self:provider.stage}}
       Environment: ${self:provider.stage}
+      TopicArn: !Ref omniLiveLogisticsErrorNotification

@@ -12,47 +12,64 @@ username = os.environ['Username']
 password = os.environ['Password']
 mcleod_headers = {'Accept': 'application/json',
                     'Content-Type': 'application/json'}
-
 INTERNAL_ERROR_MESSAGE = "Internal Error."
+def send_sns_notification(message, subject):
+    sns_client = boto3.client('sns')
+    topic_arn = os.environ['TopicArn']
+    sns_client.publish(
+        Subject=subject,
+        TopicArn=topic_arn,
+        Message=message
+    )
 
 def lambda_handler(event, context):
-    print("event:",event)   
-    for item in event["Payload"]:
-        order_id=item['item']["order_id"]
-        order_info = validate_order(order_id)
-        if not order_info or order_info['status']['S'] == 'Rejected':
-            output=get_order(order_id)
-            print("order id & env: ",order_id,os.environ['Environment'])
-            try:
-                if output['stops']:
-                    print("valid order")
-            except:
-                print("Invalid order")
-                continue
-            response=get_orders(output)
-            # Update status based on response
-            if response == 200:
-                status = 'Accepted'
-            else:
-                status = 'Rejected'
-            # Store data in DynamoDB
-            dynamodb = boto3.resource('dynamodb')
-            table = dynamodb.Table(os.environ['Dynamo_Table'])
-            tz = pytz.timezone('America/Chicago')
-            current_time = datetime.now(tz).strftime("%Y:%m:%d %H:%M:%S")
-            table.put_item(
-                Item={
-                    'order_id': order_id,
-                    'status': status,
-                    'InsertedTimeStamp': current_time
-                }
-                    )
-            
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Succeeded')
-    }
+    try:
+        print("event:", event)   
+        for item in event["Payload"]:
+            order_id = item['item']["order_id"]
+            order_info = validate_order(order_id)
+            if not order_info or order_info['status']['S'] == 'Rejected':
+                output = get_order(order_id)
+                print("order id & env: ", order_id, os.environ['Environment'])
+                try:
+                    if output['stops']:
+                        print("valid order")
+                except:
+                    print("Invalid order")
+                    continue
+                response = get_orders(output)
+                # Update status based on response
+                if response == 200:
+                    status = 'Accepted'
+                else:
+                    status = 'Rejected'
+                # Store data in DynamoDB
+                dynamodb = boto3.resource('dynamodb')
+                table = dynamodb.Table(os.environ['Dynamo_Table'])
+                tz = pytz.timezone('America/Chicago')
+                current_time = datetime.now(tz).strftime("%Y:%m:%d %H:%M:%S")
+                table.put_item(
+                    Item={
+                        'order_id': order_id,
+                        'status': status,
+                        'InsertedTimeStamp': current_time
+                    }
+                )
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Succeeded')
+        }
+    except Exception as e:
+        error_message = f"An error occurred in Lambda function: {str(e)}"
+        print(error_message)
+        send_sns_notification(error_message, "Error in Lambda Function")
+        return {
+            'statusCode': 500,
+            'body': json.dumps("Internal Error.")
+        }
 
+
+    
 def get_location_info(location_id):
     if env=='dev':
         url = f"https://tms-lvlp.loadtracking.com:6790/ws/api/locations/{location_id}"
