@@ -1,0 +1,7 @@
+omniLiveLogisticsEmailSubscription:
+  Type: AWS::SNS::Subscription
+  Properties:
+    Protocol: email
+    Endpoint: raviteja.kalluri@bizcloudexperts.com
+    TopicArn: 
+      Ref: omniLiveLogisticsErrorNotification
