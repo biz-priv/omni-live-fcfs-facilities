@@ -2,6 +2,8 @@ function:
   name: omni-live-logistics-fcfs-facilities-${self:provider.stage}
   handler: src/fcfs-facilities-update.lambda_handler
   description: omni live logistics fcfs-facilities-update
+  tags:
+    Name: fcfs-facilities
   timeout: 900
   package:
     patterns:

@@ -2,6 +2,8 @@ function:
   name: omni-live-logistics-fcfs-query-athena-${self:provider.stage}
   handler: src/query-Athena.lambda_handler
   description: omni live logistics fcfs copy s3 data
+  tags:
+    Name: fcfs-query-athena
   timeout: 900
   package:
     patterns:
