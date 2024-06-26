@@ -12,7 +12,7 @@ provider:
   deploymentBucket:
     name: ${ssm:/omni-dw/${self:provider.stage}/sls/deployment/bucket}
     serverSideEncryption: AES256
-  tags:
+  stackTags:
     Application: Omni live fcfs facilities
     CreateBy: BizCloudExperts
     Environment: ${self:custom.stage}    
