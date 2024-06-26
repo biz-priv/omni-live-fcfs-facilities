@@ -15,7 +15,7 @@ provider:
   stackTags:
     Application: Omni live fcfs facilities
     CreateBy: BizCloudExperts
-    Environment: ${self:custom.stage}    
+    # Environment: ${self:custom.stage}    
   iamRoleStatements:
     - Effect: "Allow"
       Action:
