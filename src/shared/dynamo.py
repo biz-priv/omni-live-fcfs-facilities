@@ -1,3 +1,10 @@
+# """
+# * File: src\shared\dynamo.py
+# * Project: Omni-live-fcfs-facilities
+# * Author: Bizcloud Experts
+# * Date: 2024-05-02
+# * Confidential and Proprietary
+# """
 import logging
 import json
 import boto3

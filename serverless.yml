@@ -12,6 +12,10 @@ provider:
   deploymentBucket:
     name: ${ssm:/omni-dw/${self:provider.stage}/sls/deployment/bucket}
     serverSideEncryption: AES256
+  tags:
+    Application: Omni live fcfs facilities
+    CreateBy: BizCloudExperts
+    Environment: ${self:custom.stage}    
   iamRoleStatements:
     - Effect: "Allow"
       Action:
